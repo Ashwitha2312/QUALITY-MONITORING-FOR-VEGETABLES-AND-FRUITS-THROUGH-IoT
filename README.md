@@ -1,2 +1,33 @@
 # QUALITY-MONITORING-FOR-VEGETABLES-AND-FRUITS-THROUGH-IoT
-An IoT-based food quality monitoring system that tracks the freshness of fruits and vegetables in real time. It uses an Arduino Uno, an MQ-4 gas sensor, and a DHT11 sensor to monitor ethylene, temperature, and humidity, uploading live data to ThingSpeak via an ESP8266 Wi-Fi module.
+
+
+**Overview**
+
+This project monitors the freshness of fruits and vegetables using IoT technology. The system uses gas, temperature, and humidity sensors to detect spoilage and display real-time data.
+
+
+**Components Used**
+Arduino UNO
+ESP8266
+MQ4 Gas Sensor
+DHT11 Sensor
+LCD Display
+
+
+**Software Used**
+Arduino IDE
+ThingSpeak
+
+
+**Features**
+Real-time food quality monitoring
+Gas detection for spoilage analysis
+Temperature and humidity monitoring
+IoT cloud integration
+LCD status display
+
+
+**Applications**
+Smart Agriculture
+Food Storage Systems
+Smart Monitoring Systems
