@@ -1,0 +1,89 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <SoftwareSerial.h>
+#include <dht11.h>
+#define RX 2
+#define TX 3
+#define dht_apin 11
+#define mq4Pin A0
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+dht11 dhtObject;
+String AP = "Ashu";
+String PASS = "Ashu123456";
+String API = "AAS9K9EP4JUZZ0C1";
+String HOST = "api.thingspeak.com";
+String PORT = "80";
+int countTrueCommand = 0;
+int countTimeCommand = 0;
+boolean found = false;
+SoftwareSerial esp8266(RX, TX);
+void setup() {
+  Serial.begin(9600);
+  esp8266.begin(115200);
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Connecting WiFi");
+  sendCommand("AT", 5, "OK");
+  sendCommand("AT+CWMODE=1", 5, "OK");
+  sendCommand("AT+CWJAP=\"" + AP + "\",\"" + PASS + "\"", 20, "OK");
+  lcd.clear();
+  lcd.print("WiFi Connected");
+  delay(2000);
+}
+void loop() {
+  dhtObject.read(dht_apin);
+  int tempValue = dhtObject.temperature;
+  int humValue = dhtObject.humidity;
+  int gasValue = analogRead(mq4Pin);
+  String temp = String(tempValue);
+  String hum = String(humValue);
+  String gas = String(gasValue);
+  String status;
+  if (gasValue > 400 || tempValue > 40 || humValue > 80) {
+    status = "Spoiled";
+  } else {
+    status = "Fresh";
+  }
+  // Display all on LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("T:" + temp + " H:" + hum + " G:" + gas);
+  lcd.setCursor(0, 1);
+  lcd.print("Status:" + status);
+  // Debug logging
+  Serial.print("Temperature: "); Serial.println(tempValue);
+  Serial.print("Humidity: "); Serial.println(humValue);
+  Serial.print("Gas Level: "); Serial.println(gasValue);
+  Serial.println("Status: " + status);
+  // Construct HTTP GET
+  String getData = "GET /update?api_key=" + API + "&field1=" + temp + "&field2=" + hum + "&field3=" + gas;
+  // Use single connection mode
+  sendCommand("AT+CIPMUX=0", 5, "OK");
+  sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 15, "OK");
+  delay(2000); // Important: allow connection to settle
+  sendCommand("AT+CIPSEND=" + String(getData.length() + 4), 4, ">");
+  esp8266.println(getData);
+  delay(1500);
+  countTrueCommand++;
+  sendCommand("AT+CIPCLOSE", 5, "OK");
+  delay(15000); // wait before next reading}
+void sendCommand(String command, int maxTime, char readReplay[]) {
+  Serial.print(countTrueCommand);
+  Serial.print(". AT Command => ");
+  Serial.println(command);
+  while (countTimeCommand < (maxTime * 1)) {
+    esp8266.println(command);
+    if (esp8266.find(readReplay)) {
+      found = true;
+      break; }
+    countTimeCommand++;
+  }
+  if (found) {
+    Serial.println("Command OK");
+    countTrueCommand++;
+  } else {    Serial.println("Command Failed");
+    countTrueCommand = 0;
+  }
+  countTimeCommand = 0;
+  found = false;}
